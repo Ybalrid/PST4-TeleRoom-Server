@@ -111,6 +111,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\main.cpp" />
+    <ClCompile Include="..\PST4NetServer.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\PST4NetServer.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

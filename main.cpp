@@ -1,6 +1,9 @@
 #include <iostream>
 #include <string>
 
+#include "PST4NetServer.hpp"
+#include <memory>
+
 using namespace std;
 
 void pause(const string& message = "Press enter to continue...")
@@ -12,7 +15,7 @@ void pause(const string& message = "Press enter to continue...")
 int main(int argc, char* argv[])
 {
 	//Just for debug : display all the args!
-	for (auto i{ 0U }; i < argc; ++i)
+	for (auto i{ 0U }; i < unsigned(argc); ++i)
 		cout << "arg : " << i << " : " << argv[i] << '\n';
 
 	auto port = 4242UL;
@@ -24,6 +27,8 @@ int main(int argc, char* argv[])
 	cout << "Net port to use is : " << port << '\n';
 
 	//Start server here
+	auto Server = make_unique<PST4::NetworkServer>(port);
+	Server->run();
 
 #ifdef _WIN32
 	pause();
