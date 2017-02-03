@@ -1,5 +1,7 @@
 #pragma once
 
+#include <exception>
+#include <stdexcept>
 #include <RakPeerInterface.h>
 #include <RakNetTypes.h>
 #include <PST4Packets.hpp>
