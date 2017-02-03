@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 	for (auto i{ 0U }; i < unsigned(argc); ++i)
 		cout << "arg : " << i << " : " << argv[i] << '\n';
 
-	auto port = 4242UL;
+	auto port = 42420UL;
 
 	//If more than one arg, 2nd is the port number to listen to incoming TCP
 	if (argc > 1)
