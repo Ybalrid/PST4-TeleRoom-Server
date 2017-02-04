@@ -2,7 +2,8 @@
 
 PST4::GameClient::GameClient(RakNet::SystemAddress address) :
 	distantAddress(address),
-	sessionId(std::hash<std::string>()(distantAddress.ToString()))
+	sessionId(std::hash<std::string>()(distantAddress.ToString())),
+	clientOk{ false }
 {
 	std::cout << "Creating GameClient for " << getAddress() << '\n';
 	lastHeartbeatTimePoint = std::chrono::steady_clock::now();
@@ -52,4 +53,14 @@ PST4::Quatf PST4::GameClient::getHeadOrient() const
 PST4::Vect3f PST4::GameClient::getHeadPos() const
 {
 	return headPos;
+}
+
+void PST4::GameClient::setAckNumber(uint32_t ackFromServer)
+{
+	ackSessionId = ackFromServer;
+}
+
+uint32_t PST4::GameClient::getAckFromServer()
+{
+	return ackSessionId;
 }

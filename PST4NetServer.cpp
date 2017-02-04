@@ -58,6 +58,16 @@ void NetworkServer::processPacket()
 	case ID_DISCONNECTION_NOTIFICATION:
 		handleClientDisconected();
 		break;
+	case ID_SND_RECEIPT_ACKED:
+	{
+		auto client = connectedClients[packet->systemAddress.ToString()].get();
+		uint32_t ack;
+		memcpy(&ack, packet->data + 1, 4);
+		if (client->getAckFromServer() == ack)
+		{
+			std::cout << "Remote acked session id";
+		}
+	}break;
 	default:
 		cerr << "Received packet with unimplemented ID = " << unsigned(packet->data[0]) << '\n';
 	}
@@ -67,9 +77,17 @@ void NetworkServer::processGameMessage()
 {
 	auto strAddress = packet->systemAddress.ToString();
 	auto client = connectedClients.at(strAddress).get();
+	uint32_t ack;
 	//cout << "Game message from client : " << strAddress << " ";
 	switch (packet->data[0])
 	{
+	case ID_PST4_MESSAGE_SESSION_ID:
+	{
+		serverToClientIdPacket s2cID(client->getSessionId());
+		ack = peer->Send(reinterpret_cast<char*>(&s2cID), sizeof s2cID, IMMEDIATE_PRIORITY, RELIABLE_ORDERED_WITH_ACK_RECEIPT, 0, packet->systemAddress, false);
+		client->setAckNumber(ack);
+		break;
+	}
 	case ID_PST4_MESSAGE_ECHO:
 		cout << "ECHO message : " << reinterpret_cast<echoPacket*>(packet->data)->message << "\n";
 		break;
@@ -99,7 +117,8 @@ void NetworkServer::handleNewClient()
 
 	serverToClientIdPacket s2cID(connectedClients.at(addrStr)->getSessionId());
 
-	peer->Send(reinterpret_cast<char*>(&s2cID), sizeof s2cID, HIGH_PRIORITY, RELIABLE, 0, packet->systemAddress, false);
+	auto ack = peer->Send(reinterpret_cast<char*>(&s2cID), sizeof s2cID, IMMEDIATE_PRIORITY, RELIABLE_ORDERED_WITH_ACK_RECEIPT, 0, packet->systemAddress, false);
+	connectedClients[addrStr]->setAckNumber(ack);
 }
 
 void NetworkServer::handleClientDisconected()

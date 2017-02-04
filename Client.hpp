@@ -28,6 +28,9 @@ namespace PST4
 		Quatf getHeadOrient() const;
 		Vect3f getHeadPos() const;
 
+		void setAckNumber(uint32_t ackFromServer);
+		uint32_t getAckFromServer();
+
 	private:
 		std::chrono::time_point<std::chrono::steady_clock> lastHeartbeatTimePoint;
 		RakNet::SystemAddress distantAddress;
@@ -35,5 +38,8 @@ namespace PST4
 
 		Vect3f headPos;
 		Quatf headOrient;
+		uint32_t ackSessionId;
+
+		bool clientOk;
 	};
 }
