@@ -3,23 +3,26 @@
 #include <iostream>
 
 using namespace PST4;
+using namespace RakNet;
+using namespace std;
+using namespace chrono;
 
 NetworkServer::NetworkServer(unsigned long port) :
 	running(true),
 	port(port)
 {
-	std::cout << "Starting PST4::NetworkServer on port " << port << '\n';
-	peer = RakNet::RakPeerInterface::GetInstance();
-	sd = RakNet::SocketDescriptor(port, nullptr);
+	cout << "Starting PST4::NetworkServer on port " << port << '\n';
+	peer = RakPeerInterface::GetInstance();
+	sd = SocketDescriptor(port, nullptr);
 	peer->Startup(100, &sd, 1);
 	peer->SetMaximumIncomingConnections(100);
-	std::cout << "Server started. Can handle " << 100 << " clients\n";
+	cout << "Server started. Can handle " << 100 << " clients\n";
 }
 
 NetworkServer::~NetworkServer()
 {
 	peer->Shutdown(500);
-	RakNet::RakPeerInterface::DestroyInstance(peer);
+	RakPeerInterface::DestroyInstance(peer);
 }
 
 void NetworkServer::run()
@@ -34,6 +37,16 @@ void NetworkServer::receivePackets()
 		processPacket();
 }
 
+void NetworkServer::sendPackets()
+{
+	for (auto clientPair = connectedClients.begin(); clientPair != connectedClients.end(); ++clientPair)
+	{
+		auto client = clientPair->second.get();
+		headPosePacket head(client->getSessionId(), client->getHeadPos(), client->getHeadOrient());
+		peer->Send(reinterpret_cast<char*>(&head), sizeof head, LOW_PRIORITY, UNRELIABLE, 0, UNASSIGNED_SYSTEM_ADDRESS, true);
+	}
+}
+
 void NetworkServer::processPacket()
 {
 	if (packet->data[0] > ID_USER_PACKET_ENUM) processGameMessage();
@@ -46,38 +59,58 @@ void NetworkServer::processPacket()
 		handleClientDisconected();
 		break;
 	default:
-		std::cerr << "Received packet with unimplemented ID = " << unsigned(packet->data[0]) << '\n';
+		cerr << "Received packet with unimplemented ID = " << unsigned(packet->data[0]) << '\n';
 	}
 }
 
 void NetworkServer::processGameMessage()
 {
-	std::cout << "Game message from client : " << packet->systemAddress.ToString() << " ";
+	auto strAddress = packet->systemAddress.ToString();
+	auto client = connectedClients.at(strAddress).get();
+	//cout << "Game message from client : " << strAddress << " ";
 	switch (packet->data[0])
 	{
 	case ID_PST4_MESSAGE_ECHO:
-		std::cout << "ECHO message : " << reinterpret_cast<echoPacket*>(packet->data)->message << "\n";
+		cout << "ECHO message : " << reinterpret_cast<echoPacket*>(packet->data)->message << "\n";
 		break;
 	case ID_PST4_MESSAGE_HEARTBEAT:
-		std::cout << "Received heartbeat, should have sent ACK now\n";
+		cout << "Received heartbeat, ";
+		cout << "time since last : " << duration_cast<seconds>(steady_clock::now() - client->getLastHreatbeatTimePoint()).count() << " sec.\n";
+		client->heartbeat();
+		cout << "last known head pose is : " << client->getHeadPos() << " " << client->getHeadOrient() << '\n';
 		break;
+	case ID_PST4_MESSAGE_HEAD_POSE:
+	{
+		auto headPose{ reinterpret_cast<headPosePacket*>(packet->data) };
+		client->setHeadPose(headPose->absPos, headPose->absOrient);
+		//cout << "head pose for " << client->getSessionId() << " : " << client->getHeadPos() << " " << client->getHeadOrient() << '\n';
+	}
+	break;
 	default:
-		std::cerr << "Received unimplemented GameMessage ID = " << packet->data[0] << " From " << packet->systemAddress.ToString() << '\n';
+		cerr << "Received unimplemented GameMessage ID = " << unsigned(packet->data[0]) << " From " << packet->systemAddress.ToString() << '\n';
 	}
 }
 
 void NetworkServer::handleNewClient()
 {
-	std::cout << "New client connected\n";
+	cout << "New client connected\n";
+	std::string addrStr = packet->systemAddress.ToString();
+	connectedClients[addrStr] = make_unique<GameClient>(packet->systemAddress);
+
+	serverToClientIdPacket s2cID(connectedClients.at(addrStr)->getSessionId());
+
+	peer->Send(reinterpret_cast<char*>(&s2cID), sizeof s2cID, HIGH_PRIORITY, RELIABLE, 0, packet->systemAddress, false);
 }
 
 void NetworkServer::handleClientDisconected()
 {
-	std::cout << "Client disconnected\n";
+	cout << "Client disconnected\n";
+	connectedClients.erase(packet->systemAddress.ToString());
 }
 
 void NetworkServer::tick()
 {
-	std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	this_thread::sleep_for(milliseconds(5));
 	receivePackets();
+	sendPackets();
 }

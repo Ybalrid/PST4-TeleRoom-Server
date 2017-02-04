@@ -5,6 +5,11 @@
 #include <RakPeerInterface.h>
 #include <RakNetTypes.h>
 #include <PST4Packets.hpp>
+#include <unordered_map>
+#include <memory>
+#include <chrono>
+
+#include "Client.hpp"
 
 namespace PST4
 {
@@ -16,6 +21,7 @@ namespace PST4
 		void run();
 	private:
 		void receivePackets();
+		void sendPackets();
 		void processPacket();
 
 		void handleNewClient();
@@ -29,5 +35,7 @@ namespace PST4
 		RakNet::RakPeerInterface* peer;
 		RakNet::SocketDescriptor sd;
 		RakNet::Packet* packet;
+
+		std::unordered_map<std::string, std::unique_ptr<PST4::GameClient>> connectedClients;
 	};
 }
