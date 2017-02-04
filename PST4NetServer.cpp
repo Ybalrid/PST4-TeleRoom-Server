@@ -60,6 +60,8 @@ void NetworkServer::processPacket()
 	case ID_NEW_INCOMING_CONNECTION:
 		handleNewClient();
 		break;
+	case ID_CONNECTION_LOST: //Log the lost conection and let execute the next item to handle the disconnect
+		std::cout << "lost connection with " << packet->systemAddress.ToString() << std::endl;
 	case ID_DISCONNECTION_NOTIFICATION:
 		handleClientDisconected();
 		break;
