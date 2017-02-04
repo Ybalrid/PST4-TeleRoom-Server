@@ -24,22 +24,33 @@ namespace PST4
 		size_t getSessionId() const;
 
 		void setHeadPose(Vect3f p, Quatf o);
+		void setHandPose(Vect3f leftp, Quatf leftq, Vect3f rightp, Quatf rightq);
 
 		Quatf getHeadOrient() const;
 		Vect3f getHeadPos() const;
 
+		Vect3f getLeftHandPos() const;
+		Vect3f getRightHandPos() const;
+
+		Quatf getLeftHandOrient() const;
+		Quatf getrightHandOrient() const;
+
 		void setAckNumber(uint32_t ackFromServer);
-		uint32_t getAckFromServer();
+		uint32_t getAckFromServer() const;
+
+		void setLastHandPoseGood(bool state);
+		bool getLastHandPoseGood() const;
 
 	private:
 		std::chrono::time_point<std::chrono::steady_clock> lastHeartbeatTimePoint;
 		RakNet::SystemAddress distantAddress;
 		const size_t sessionId;
 
-		Vect3f headPos;
-		Quatf headOrient;
+		Vect3f headPos, leftHandPos, rightHandPos;
+		Quatf headOrient, leftHandOrient, rightHandOrient;
 		uint32_t ackSessionId;
 
 		bool clientOk;
+		bool lastHandPoseGood;
 	};
 }

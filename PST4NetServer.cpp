@@ -44,6 +44,11 @@ void NetworkServer::sendPackets()
 		auto client = clientPair->second.get();
 		headPosePacket head(client->getSessionId(), client->getHeadPos(), client->getHeadOrient());
 		peer->Send(reinterpret_cast<char*>(&head), sizeof head, LOW_PRIORITY, UNRELIABLE, 0, UNASSIGNED_SYSTEM_ADDRESS, true);
+
+		handPosePacket hand(client->getSessionId(), false);
+		if (client->getLastHandPoseGood())
+			hand = handPosePacket(client->getSessionId(), client->getLeftHandPos(), client->getLeftHandOrient(), client->getRightHandPos(), client->getrightHandOrient());
+		peer->Send(reinterpret_cast<char*>(&hand), sizeof hand, LOW_PRIORITY, UNRELIABLE, 0, UNASSIGNED_SYSTEM_ADDRESS, true);
 	}
 }
 
@@ -104,6 +109,13 @@ void NetworkServer::processGameMessage()
 		//cout << "head pose for " << client->getSessionId() << " : " << client->getHeadPos() << " " << client->getHeadOrient() << '\n';
 	}
 	break;
+	case ID_PST4_MESSAGE_HAND_POSE:
+	{
+		auto handPose{ reinterpret_cast<handPosePacket*>(packet->data) };
+		client->setLastHandPoseGood(handPose->hasHands);
+		if (client->getLastHandPoseGood()) client->setHandPose(handPose->leftPos, handPose->leftOrient, handPose->rightPos, handPose->rightOrient);
+	}
+	break;
 	default:
 		cerr << "Received unimplemented GameMessage ID = " << unsigned(packet->data[0]) << " From " << packet->systemAddress.ToString() << '\n';
 	}
@@ -124,7 +136,12 @@ void NetworkServer::handleNewClient()
 void NetworkServer::handleClientDisconected()
 {
 	cout << "Client disconnected\n";
-	connectedClients.erase(packet->systemAddress.ToString());
+	auto sysAddressStr = packet->systemAddress.ToString();
+	auto endedSessionId = connectedClients[sysAddressStr]->getSessionId();
+	connectedClients.erase(sysAddressStr);
+
+	sessionEndedPacket sessionEnded(endedSessionId);
+	peer->Send(reinterpret_cast<char*>(&sessionEnded), sizeof sessionEnded, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, UNASSIGNED_SYSTEM_ADDRESS, true);
 }
 
 void NetworkServer::tick()
