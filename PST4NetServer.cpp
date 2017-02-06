@@ -88,6 +88,13 @@ void NetworkServer::processGameMessage()
 	//cout << "Game message from client : " << strAddress << " ";
 	switch (packet->data[0])
 	{
+	case ID_PST4_MESSAGE_VOICE_BUFFER:
+	{
+		voicePacket* voice = reinterpret_cast<voicePacket*>(packet->data);
+		//Calculate actual packet size:
+		size_t size = voice->dataLen + sizeof voice->type + sizeof voice->sessionId + sizeof voice->frameSizes + sizeof voice->dataLen;
+		peer->Send(reinterpret_cast<char*>(packet->data), size, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 1, UNASSIGNED_SYSTEM_ADDRESS, true);
+	}
 	case ID_PST4_MESSAGE_SESSION_ID:
 	{
 		serverToClientIdPacket s2cID(client->getSessionId());
