@@ -95,6 +95,7 @@ void NetworkServer::processGameMessage()
 		size_t size = voice->dataLen + sizeof voice->type + sizeof voice->sessionId + sizeof voice->frameSizes + sizeof voice->dataLen;
 		peer->Send(reinterpret_cast<char*>(packet->data), size, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 1, UNASSIGNED_SYSTEM_ADDRESS, true);
 	}
+	break;
 	case ID_PST4_MESSAGE_SESSION_ID:
 	{
 		serverToClientIdPacket s2cID(client->getSessionId());
