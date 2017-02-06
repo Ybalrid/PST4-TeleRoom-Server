@@ -93,7 +93,7 @@ void NetworkServer::processGameMessage()
 		voicePacket* voice = reinterpret_cast<voicePacket*>(packet->data);
 		//Calculate actual packet size:
 		size_t size = voice->dataLen;
-		std::cerr << "dataLen : " << size;
+		//std::cerr << "dataLen : " << size;
 		size += 6 * sizeof(char) + sizeof(size_t);
 		//std::cerr << "Calculated size : " << size << '\n';
 		peer->Send(reinterpret_cast<char*>(packet->data), size, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 1, UNASSIGNED_SYSTEM_ADDRESS, true);
