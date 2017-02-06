@@ -7,8 +7,12 @@ all: PST4Server
 PST4NetServer.o: PST4NetServer.cpp PST4NetServer.hpp external/PST4-Teleroom-common/PST4Packets.hpp
 	$(CC) -c PST4NetServer.cpp -o PST4NetServer.o $(LDFLAG) $(IFLAG)
 
+Client.o: Client.cpp Client.hpp external/PST4-Teleroom-common/PST4Packets.hpp
+	$(CC) -c Client.cpp -o Client.o $(LDFLAG) $(IFLAG)
+
 main.o: main.cpp
 	$(CC) -c main.cpp -o main.o $(LDFLAG) $(IFLAG)
 
-PST4Server: PST4NetServer.o main.o
-	$(CC) main.o PST4NetServer.o $(LDFLAG) $(IFLAG) -o PST4Server
+PST4Server: PST4NetServer.o main.o Client.o
+	$(CC) main.o PST4NetServer.o Client.o $(LDFLAG) $(IFLAG) -o PST4Server
+
