@@ -9,14 +9,15 @@ using namespace chrono;
 
 NetworkServer::NetworkServer(unsigned long port) :
 	running(true),
-	port(port)
+	port(port),
+	packet(nullptr)
 {
 	cout << "Starting PST4::NetworkServer on port " << port << '\n';
 	peer = RakPeerInterface::GetInstance();
 	sd = SocketDescriptor(port, nullptr);
-	peer->Startup(100, &sd, 1);
-	peer->SetMaximumIncomingConnections(100);
-	cout << "Server started. Can handle " << 100 << " clients\n";
+	peer->Startup(MAX_CLIENTS, &sd, 1);
+	peer->SetMaximumIncomingConnections(MAX_CLIENTS);
+	cout << "Server started. Can handle " << MAX_CLIENTS << " clients\n";
 }
 
 NetworkServer::~NetworkServer()
@@ -74,7 +75,8 @@ void NetworkServer::processPacket()
 		{
 			std::cout << "Remote acked session id";
 		}
-	}break;
+	}
+	break;
 	default:
 		cerr << "Received packet with unimplemented ID = " << unsigned(packet->data[0]) << '\n';
 	}
@@ -90,13 +92,15 @@ void NetworkServer::processGameMessage()
 	{
 	case ID_PST4_MESSAGE_VOICE_BUFFER:
 	{
-		voicePacket* voice = reinterpret_cast<voicePacket*>(packet->data);
-		//Calculate actual packet size:
-		size_t size = voice->dataLen;
-		//std::cerr << "dataLen : " << size;
-		size += 6 * sizeof(char) + sizeof(size_t);
-		//std::cerr << "Calculated size : " << size << '\n';
-		peer->Send(reinterpret_cast<char*>(packet->data), size, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 1, UNASSIGNED_SYSTEM_ADDRESS, true);
+		/*		voicePacket* voice = reinterpret_cast<voicePacket*>(packet->data);
+				//Calculate actual packet size:
+				size_t size = voice->dataLen;
+				//std::cerr << "dataLen : " << size;
+				size += 6 * sizeof(char) + sizeof(size_t);
+				//std::cerr << "Calculated size : " << size << '\n';*/
+
+		RakNet::BitStream voiceBitStream(packet->data, packet->length, true);
+		peer->Send(&voiceBitStream, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 1, UNASSIGNED_SYSTEM_ADDRESS, true);
 	}
 	break;
 	case ID_PST4_MESSAGE_SESSION_ID:

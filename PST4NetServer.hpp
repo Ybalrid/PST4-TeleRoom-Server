@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <RakPeerInterface.h>
 #include <RakNetTypes.h>
+#include <BitStream.h>
 #include <PST4Packets.hpp>
 #include <unordered_map>
 #include <memory>
@@ -16,6 +17,7 @@ namespace PST4
 	class NetworkServer
 	{
 	public:
+		static constexpr size_t MAX_CLIENTS = 10;
 		NetworkServer(unsigned long port);
 		~NetworkServer();
 		void run();
