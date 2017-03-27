@@ -32,5 +32,11 @@
     <ClInclude Include="..\Client.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\external\PST4-Teleroom-common\PST4Packets.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DynamicObject.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

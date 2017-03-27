@@ -51,6 +51,23 @@ void NetworkServer::sendPackets()
 			hand = handPosePacket(client->getSessionId(), client->getLeftHandPos(), client->getLeftHandOrient(), client->getRightHandPos(), client->getrightHandOrient());
 		peer->Send(reinterpret_cast<char*>(&hand), sizeof hand, LOW_PRIORITY, UNRELIABLE, 0, UNASSIGNED_SYSTEM_ADDRESS, true);
 	}
+
+	for(auto dynObjPair = dynamicObjects.begin();  dynObjPair!= dynamicObjects.end(); ++dynObjPair)
+	{
+
+		cout << "Server stored dynamic object status : \n";
+		if (dynObjPair->second->isOwned())
+		{
+			cout << "is owned by " << dynObjPair->second->getOwner() << '\n';
+		}
+		else
+			cout << "is owned by nobody !!!!!!!!!\n";
+
+		dynamicSceneObjectPacket obj(dynObjPair->first, dynObjPair->second->getPosition(), dynObjPair->second->getScale(), dynObjPair->second->getOrientation());
+		obj.owner = dynObjPair->second->getOwner();
+		obj.sender = 0;
+		peer->Send(reinterpret_cast<char*>(&obj), sizeof obj, LOW_PRIORITY, UNRELIABLE, 0, UNASSIGNED_SYSTEM_ADDRESS, true);
+	}
 }
 
 void NetworkServer::processPacket()
@@ -137,7 +154,45 @@ void NetworkServer::processGameMessage()
 	case ID_PST4_MESSAGE_DYNAMIC_SCENE_OBJECT:
 	{
 		auto dynamicObject{ reinterpret_cast<dynamicSceneObjectPacket*>(packet->data) };
-		cout << "dynamic scene object " << dynamicObject->position << '\n';
+		cout << "dynamic scene object " << '\n'
+			<< "Name : " << dynamicObject->idstring << '\n'
+			<< "Position : " << dynamicObject->position << '\n'
+			<< "Orientation : " << dynamicObject->orientation << '\n'
+			<< "Scale : " << dynamicObject->scale << '\n';
+		if (dynamicObject->isOwned())
+			cout << "is owned by " << dynamicObject->owner << '\n';
+
+
+		if (dynamicObjects.count(dynamicObject->idstring) == 0)
+		{
+			cout << "This object was unknown for the server, we are creating it\n";
+			dynamicObjects[dynamicObject->idstring] = std::make_unique<PST4::DynamicObject>
+				(dynamicObject->position, dynamicObject->scale, dynamicObject->orientation, dynamicObject->owner);
+		}
+		else
+		{
+			auto object = dynamicObjects[dynamicObject->idstring].get();
+
+			if ((object->isOwned() && object->getOwner() == dynamicObject->sender))
+			{
+				object->setPosition(dynamicObject->position);
+				object->setOrientation(dynamicObject->orientation);
+				object->setScale(dynamicObject->scale);
+			}
+
+			if (object->isOwned() &&
+				object->getOwner() == dynamicObject->sender &&
+				!dynamicObject->isOwned())
+			{
+				//only owner can set not owned
+				object->setOwner(0);
+			}
+
+			if (!object->isOwned())
+			{
+				object->setOwner(dynamicObject->owner);
+			}
+		}
 	}
 	break;
 

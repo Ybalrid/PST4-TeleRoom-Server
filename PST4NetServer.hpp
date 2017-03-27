@@ -11,6 +11,8 @@
 #include <chrono>
 
 #include "Client.hpp"
+#include "DynamicObject.hpp"
+
 
 namespace PST4
 {
@@ -25,7 +27,6 @@ namespace PST4
 		void receivePackets();
 		void sendPackets();
 		void processPacket();
-
 		void handleNewClient();
 		void handleClientDisconected();
 
@@ -39,5 +40,7 @@ namespace PST4
 		RakNet::Packet* packet;
 
 		std::unordered_map<std::string, std::unique_ptr<PST4::GameClient>> connectedClients;
+		std::unordered_map<std::string, std::unique_ptr<PST4::DynamicObject>> dynamicObjects;
+
 	};
 }

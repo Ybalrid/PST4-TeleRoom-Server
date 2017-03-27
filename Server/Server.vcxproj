@@ -124,6 +124,8 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Client.hpp" />
+    <ClInclude Include="..\DynamicObject.hpp" />
+    <ClInclude Include="..\external\PST4-Teleroom-common\PST4Packets.hpp" />
     <ClInclude Include="..\PST4NetServer.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
