@@ -133,6 +133,14 @@ void NetworkServer::processGameMessage()
 		if (client->getLastHandPoseGood()) client->setHandPose(handPose->leftPos, handPose->leftOrient, handPose->rightPos, handPose->rightOrient);
 	}
 	break;
+
+	case ID_PST4_MESSAGE_DYNAMIC_SCENE_OBJECT:
+	{
+		auto dynamicObject{ reinterpret_cast<dynamicSceneObjectPacket*>(packet->data) };
+		cout << "dynamic scene object " << dynamicObject->position << '\n';
+	}
+	break;
+
 	default:
 		cerr << "Received unimplemented GameMessage ID = " << unsigned(packet->data[0]) << " From " << packet->systemAddress.ToString() << '\n';
 	}
