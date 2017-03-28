@@ -173,12 +173,12 @@ void NetworkServer::processGameMessage()
 		{
 			auto object = dynamicObjects[dynamicObject->idstring].get();
 
-			if ((object->isOwned() && object->getOwner() == dynamicObject->sender))
-			{
+			/*if ((object->isOwned() && object->getOwner() == dynamicObject->sender))
+			{*/
 				object->setPosition(dynamicObject->position);
 				object->setOrientation(dynamicObject->orientation);
 				object->setScale(dynamicObject->scale);
-			}
+			//}
 
 			if (object->isOwned() &&
 				object->getOwner() == dynamicObject->sender &&
