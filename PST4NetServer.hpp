@@ -30,6 +30,9 @@ namespace PST4
 		void handleNewClient();
 		void handleClientDisconected();
 
+		void checkPhysicsMasterFlag();
+		size_t master;
+
 		void processGameMessage();
 
 		void tick();

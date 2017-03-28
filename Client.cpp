@@ -4,7 +4,8 @@ PST4::GameClient::GameClient(RakNet::SystemAddress address) :
 	distantAddress(address),
 	sessionId(std::hash<std::string>()(distantAddress.ToString())),
 	clientOk{ false },
-	lastHandPoseGood(false)
+	lastHandPoseGood(false),
+	physicsMaster(false)
 {
 	std::cout << "Creating GameClient for " << getAddress() << '\n';
 	lastHeartbeatTimePoint = std::chrono::steady_clock::now();
@@ -102,4 +103,16 @@ void PST4::GameClient::setLastHandPoseGood(bool state)
 bool PST4::GameClient::getLastHandPoseGood() const
 {
 	return lastHandPoseGood;
+}
+
+bool PST4::GameClient::isPhysicsMaster() const
+{
+	return physicsMaster;
+}
+
+void PST4::GameClient::setPhysicsMaster(bool master)
+{
+	if (master)
+		std::cout << "Client " << sessionId << " is physics master now\n";
+	physicsMaster = master;
 }

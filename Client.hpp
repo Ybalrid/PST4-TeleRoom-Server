@@ -41,6 +41,9 @@ namespace PST4
 		void setLastHandPoseGood(bool state);
 		bool getLastHandPoseGood() const;
 
+		bool isPhysicsMaster() const;
+		void setPhysicsMaster(bool master = true);
+
 	private:
 		std::chrono::time_point<std::chrono::steady_clock> lastHeartbeatTimePoint;
 		RakNet::SystemAddress distantAddress;
@@ -52,5 +55,6 @@ namespace PST4
 
 		bool clientOk;
 		bool lastHandPoseGood;
+		bool physicsMaster;
 	};
 }

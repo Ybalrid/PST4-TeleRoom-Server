@@ -65,7 +65,7 @@ void NetworkServer::sendPackets()
 
 		dynamicSceneObjectPacket obj(dynObjPair->first, dynObjPair->second->getPosition(), dynObjPair->second->getScale(), dynObjPair->second->getOrientation());
 		obj.owner = dynObjPair->second->getOwner();
-		obj.sender = 0;
+		obj.sender = master;
 		peer->Send(reinterpret_cast<char*>(&obj), sizeof obj, LOW_PRIORITY, UNRELIABLE, 0, UNASSIGNED_SYSTEM_ADDRESS, true);
 	}
 }
@@ -173,12 +173,13 @@ void NetworkServer::processGameMessage()
 		{
 			auto object = dynamicObjects[dynamicObject->idstring].get();
 
-			/*if ((object->isOwned() && object->getOwner() == dynamicObject->sender))
-			{*/
+			if ((object->isOwned() && object->getOwner() == dynamicObject->sender) 
+				|| dynamicObject->sender == master)
+			{
 				object->setPosition(dynamicObject->position);
 				object->setOrientation(dynamicObject->orientation);
 				object->setScale(dynamicObject->scale);
-			//}
+			}
 
 			if (object->isOwned() &&
 				object->getOwner() == dynamicObject->sender &&
@@ -211,6 +212,8 @@ void NetworkServer::handleNewClient()
 
 	auto ack = peer->Send(reinterpret_cast<char*>(&s2cID), sizeof s2cID, IMMEDIATE_PRIORITY, RELIABLE_ORDERED_WITH_ACK_RECEIPT, 0, packet->systemAddress, false);
 	connectedClients[addrStr]->setAckNumber(ack);
+
+	checkPhysicsMasterFlag();
 }
 
 void NetworkServer::handleClientDisconected()
@@ -222,6 +225,46 @@ void NetworkServer::handleClientDisconected()
 
 	sessionEndedPacket sessionEnded(endedSessionId);
 	peer->Send(reinterpret_cast<char*>(&sessionEnded), sizeof sessionEnded, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, UNASSIGNED_SYSTEM_ADDRESS, true);
+
+	checkPhysicsMasterFlag();
+}
+
+void PST4::NetworkServer::checkPhysicsMasterFlag()
+{
+	bool foundMaster = false;
+	for (auto clientPair = connectedClients.begin(); clientPair != connectedClients.end(); ++clientPair)
+	{
+		auto client = clientPair->second.get();
+
+		if (!foundMaster)
+		{
+			if (client->isPhysicsMaster())
+			{
+				foundMaster = true;
+				master = client->getSessionId();
+			}
+		}
+		else
+		{
+			client->setPhysicsMaster(false);
+		}
+	}
+
+	if (!foundMaster)
+	{
+		auto clientIterator = connectedClients.begin();
+		if (clientIterator != connectedClients.end())
+		{
+			auto client = clientIterator->second.get();
+			client->setPhysicsMaster();
+			master = client->getSessionId();
+		}
+		else
+		{
+			master = 0;
+		}
+
+	}
 }
 
 void NetworkServer::tick()
