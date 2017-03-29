@@ -52,16 +52,15 @@ void NetworkServer::sendPackets()
 		peer->Send(reinterpret_cast<char*>(&hand), sizeof hand, LOW_PRIORITY, UNRELIABLE, 0, UNASSIGNED_SYSTEM_ADDRESS, true);
 	}
 
-	for(auto dynObjPair = dynamicObjects.begin();  dynObjPair!= dynamicObjects.end(); ++dynObjPair)
+	for (auto dynObjPair = dynamicObjects.begin(); dynObjPair != dynamicObjects.end(); ++dynObjPair)
 	{
-
-		cout << "Server stored dynamic object status : \n";
-		if (dynObjPair->second->isOwned())
-		{
-			cout << "is owned by " << dynObjPair->second->getOwner() << '\n';
-		}
-		else
-			cout << "is owned by nobody !!!!!!!!!\n";
+		//cout << "Server stored dynamic object status : \n";
+		//if (dynObjPair->second->isOwned())
+		//{
+		//	cout << "is owned by " << dynObjPair->second->getOwner() << '\n';
+		//}
+		//else
+		//	cout << "is owned by nobody !!!!!!!!!\n";
 
 		dynamicSceneObjectPacket obj(dynObjPair->first, dynObjPair->second->getPosition(), dynObjPair->second->getScale(), dynObjPair->second->getOrientation());
 		obj.owner = dynObjPair->second->getOwner();
@@ -154,14 +153,13 @@ void NetworkServer::processGameMessage()
 	case ID_PST4_MESSAGE_DYNAMIC_SCENE_OBJECT:
 	{
 		auto dynamicObject{ reinterpret_cast<dynamicSceneObjectPacket*>(packet->data) };
-		cout << "dynamic scene object " << '\n'
-			<< "Name : " << dynamicObject->idstring << '\n'
-			<< "Position : " << dynamicObject->position << '\n'
-			<< "Orientation : " << dynamicObject->orientation << '\n'
-			<< "Scale : " << dynamicObject->scale << '\n';
-		if (dynamicObject->isOwned())
-			cout << "is owned by " << dynamicObject->owner << '\n';
-
+		//cout << "dynamic scene object " << '\n'
+		//	<< "Name : " << dynamicObject->idstring << '\n'
+		//	<< "Position : " << dynamicObject->position << '\n'
+		//	<< "Orientation : " << dynamicObject->orientation << '\n'
+		//	<< "Scale : " << dynamicObject->scale << '\n';
+		//if (dynamicObject->isOwned())
+		//	cout << "is owned by " << dynamicObject->owner << '\n';
 
 		if (dynamicObjects.count(dynamicObject->idstring) == 0)
 		{
@@ -173,7 +171,7 @@ void NetworkServer::processGameMessage()
 		{
 			auto object = dynamicObjects[dynamicObject->idstring].get();
 
-			if ((object->isOwned() && object->getOwner() == dynamicObject->sender) 
+			if ((object->isOwned() && object->getOwner() == dynamicObject->sender)
 				|| dynamicObject->sender == master)
 			{
 				object->setPosition(dynamicObject->position);
@@ -226,6 +224,12 @@ void NetworkServer::handleClientDisconected()
 	sessionEndedPacket sessionEnded(endedSessionId);
 	peer->Send(reinterpret_cast<char*>(&sessionEnded), sizeof sessionEnded, IMMEDIATE_PRIORITY, RELIABLE_ORDERED, 0, UNASSIGNED_SYSTEM_ADDRESS, true);
 
+	for (auto dynObjPair = dynamicObjects.begin(); dynObjPair != dynamicObjects.end(); ++dynObjPair)
+	{
+		auto obj = dynObjPair->second.get();
+		if (obj->getOwner() == endedSessionId) obj->setOwner(0);
+	}
+
 	checkPhysicsMasterFlag();
 }
 
@@ -263,7 +267,6 @@ void PST4::NetworkServer::checkPhysicsMasterFlag()
 		{
 			master = 0;
 		}
-
 	}
 }
 
